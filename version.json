@@ -1,0 +1,18 @@
+{
+  "version": "1.05",
+  "releaseDate": "2025-03-25",
+  "changelog": [
+    "Added GitHub auto-update system with startup check toggle",
+    "Added manual Check for Updates button",
+    "Added one-click update download with auto-install .bat",
+    "Added Close App button with two-step shutdown modal",
+    "Version bumped to 1.05"
+  ],
+  "files": {
+    "app": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/app/orbix-nichefinder-x.jsx",
+    "updater": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/updater/NicheFinderX-Update.bat",
+    "installer": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-Windows-Installer.zip"
+  },
+  "minNodeVersion": "18",
+  "repoUrl": "https://github.com/roughboy99/orbix-nichefinder-x"
+}
