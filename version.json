@@ -1,7 +1,11 @@
 {
-  "version": "1.06",
+  "version": "1.07",
   "releaseDate": "2025-03-25",
   "changelog": [
+    "v1.07: Fixed parseUser \u2014 field names now match actual TwitterAPI.io response schema",
+    "v1.07: Removed Content-Type header from GET requests (was causing empty results)",
+    "v1.07: Improved empty results error message with actionable suggestions",
+    "v1.07: Fixed false update popup \u2014 CURRENT_VERSION now matches version.json",
     "v1.06: API key validation with visual indicator (green checkmark / red X)",
     "v1.06: AES-256-GCM encrypted API key storage in localStorage",
     "v1.06: Proxy health-check banner \u2014 alerts if vite.config.js missing proxy",
