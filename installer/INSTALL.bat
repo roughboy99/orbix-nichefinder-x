@@ -1,10 +1,10 @@
 @echo off
-title Orbix NicheFinder X — Installer
+title Orbix NicheFinder X - Installer v1.06
 color 0B
 
 echo.
 echo  ============================================================
-echo   ORBIX NicheFinder X  v1.03  ^|  Windows Installer
+echo   ORBIX NicheFinder X  v1.06  ^|  Windows Installer
 echo   Orbix Automation Solutions  ^|  getorbix.com
 echo  ============================================================
 echo.
