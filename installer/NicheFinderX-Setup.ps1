@@ -194,7 +194,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, strictPort: false, open: true }
+  server: {
+    port: 5173,
+    strictPort: false,
+    open: true,
+    proxy: {
+      '/twitterapi': {
+        target: 'https://api.twitterapi.io',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/twitterapi/, ''),
+        secure: true,
+      }
+    }
+  }
 })
 '@
 Set-Content -Path (Join-Path $appDir "vite.config.js") -Value $viteConfig -Encoding UTF8
