@@ -4,15 +4,24 @@
   "changelog": [
     "Added GitHub auto-update system with startup check toggle",
     "Added manual Check for Updates button",
-    "Added one-click update download with auto-install .bat",
+    "Added one-click update download with auto-install scripts (Windows .bat + macOS/Linux .sh)",
     "Added Close App button with two-step shutdown modal",
+    "Port collision handling \u2014 strictPort: false (Vite auto-selects next free port)",
+    "macOS and Linux installers added (install.sh, install.mac.command)",
+    "Universal installer bundle for all platforms",
+    "TOC fixed in documentation \u2014 auto-populates when Word opens the file",
     "Version bumped to 1.05"
   ],
   "files": {
     "app": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/app/orbix-nichefinder-x.jsx",
-    "updater": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/updater/NicheFinderX-Update.bat",
-    "installer": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-Windows-Installer.zip"
+    "updaterWindows": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/updater/NicheFinderX-Update.bat",
+    "updaterMacLinux": "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/updater/NicheFinderX-Update.sh",
+    "installerUniversal": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-Universal-Installer.zip",
+    "installerWindows": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-Windows-Installer.zip",
+    "installerMac": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-macOS-Installer.zip",
+    "installerLinux": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/installer/NicheFinderX-Linux-Installer.zip"
   },
   "minNodeVersion": "18",
-  "repoUrl": "https://github.com/roughboy99/orbix-nichefinder-x"
+  "repoUrl": "https://github.com/roughboy99/orbix-nichefinder-x",
+  "documentation": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/docs/orbix-nichefinder-x-docs-v1.07.docx"
 }
