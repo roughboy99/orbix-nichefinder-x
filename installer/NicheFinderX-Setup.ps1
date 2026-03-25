@@ -1,5 +1,5 @@
 ﻿# ============================================================
-#  ORBIX NICHEFINDER X - Windows Installer v1.05
+#  ORBIX NICHEFINDER X - Windows Installer v1.06
 #  Orbix Automation Solutions | getorbix.com
 #  (610) ORBIX AI - (610) 672-4924
 # ============================================================
@@ -8,7 +8,7 @@
 
 param([string]$InstallPath = "")
 
-$Host.UI.RawUI.WindowTitle = "Orbix NicheFinder X - Installer v1.05"
+$Host.UI.RawUI.WindowTitle = "Orbix NicheFinder X - Installer v1.06"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Write-Step   { param($msg) Write-Host "" ; Write-Host "  >>> $msg" -ForegroundColor Yellow }
@@ -24,7 +24,7 @@ Write-Host ""
 Write-Host "  +============================================================+" -ForegroundColor DarkCyan
 Write-Host "  |                                                            |" -ForegroundColor DarkCyan
 Write-Host "  |   " -NoNewline -ForegroundColor DarkCyan
-Write-Host "ORBIX NicheFinder X - Windows Installer v1.05" -NoNewline -ForegroundColor White
+Write-Host "ORBIX NicheFinder X - Windows Installer v1.06" -NoNewline -ForegroundColor White
 Write-Host "   |" -ForegroundColor DarkCyan
 Write-Host "  |   " -NoNewline -ForegroundColor DarkCyan
 Write-Host "The perfect companion to Andy Hafell's Content Mate" -NoNewline -ForegroundColor Yellow
@@ -189,7 +189,7 @@ Set-Content -Path (Join-Path $appDir "package.json") -Value $packageJson -Encodi
 Write-OK "package.json written"
 
 # vite.config.js
-$viteConfig = @'
+$viteConfig = @"
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 export default defineConfig({
@@ -208,24 +208,7 @@ export default defineConfig({
     }
   }
 })
-'@vitejs/plugin-react'
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    strictPort: false,
-    open: true,
-    proxy: {
-      '/twitterapi': {
-        target: 'https://api.twitterapi.io',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/twitterapi/, ''),
-        secure: true,
-      }
-    }
-  }
-})
-'@
+"@
 Set-Content -Path (Join-Path $appDir "vite.config.js") -Value $viteConfig -Encoding UTF8
 Write-OK "vite.config.js written"
 
