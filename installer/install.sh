@@ -223,7 +223,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, open: true }
+  server: { port: 5173, strictPort: false, open: true }
 })
 VITECONF
 ok "vite.config.js written"
@@ -291,7 +291,9 @@ cat > "$LAUNCHER" << LAUNCHSCRIPT
 #!/usr/bin/env bash
 echo ""
 echo "  Orbix NicheFinder X v1.05 — Starting..."
-echo "  Open your browser at: http://localhost:5173"
+echo "  Vite will open your browser automatically."
+echo "  If port 5173 is busy, Vite picks the next free port."
+echo "  Check the output below for the actual URL."
 echo "  Press Ctrl+C to stop the server"
 echo ""
 cd "$APP_DIR"
@@ -361,7 +363,7 @@ else
 echo -e "  ║   • Click NicheFinder X in your app menu / Desktop     ║"
 fi
 echo -e "  ║   • Or run: ${LAUNCHER}"
-echo -e "  ║   • Browser opens at http://localhost:5173              ║"
+echo -e "  ${CYAN}║${NC}   ${CYAN}• Vite opens your browser automatically                    ${CYAN}║${NC}"
 echo -e "  ║                                                          ║"
 echo -e "  ║   Get your API key: twitterapi.io?ref=roughboy666       ║"
 echo -e "  ║                                                          ║"
@@ -370,7 +372,7 @@ echo ""
 
 read -r -p "  Launch NicheFinder X now? (y/N): " LAUNCH
 if [[ "${LAUNCH,,}" == "y" ]]; then
-  info "Starting server — browser will open at http://localhost:5173"
+  info "Starting server — Vite will open your browser automatically"
   open "$LAUNCHER" 2>/dev/null || bash "$LAUNCHER"
 fi
 
