@@ -60,18 +60,19 @@ const fmt = n => {
 }
 
 const parseUser = u => ({
-  id:          u.id || u.userId || u.id_str || Math.random().toString(36),
+  // Field names match the actual TwitterAPI.io /twitter/user/search response schema
+  id:          u.id  || u.id_str  || Math.random().toString(36),
   name:        u.name || u.displayName || "",
-  handle:      (u.userName || u.screen_name || u.username || "").replace(/^@/, ""),
-  followers:   u.followers_count  || u.followersCount  || u.public_metrics?.followers_count || 0,
-  following:   u.friends_count    || u.followingCount  || u.public_metrics?.following_count || 0,
-  tweets:      u.statuses_count   || u.tweetsCount     || u.public_metrics?.tweet_count     || 0,
-  bio:         u.description || u.bio || "",
-  verified:    !!(u.verified || u.isVerified),
-  blueVerified:!!(u.is_blue_verified || u.blueVerified),
-  avatar:      u.profile_image_url || u.profileImageUrl || u.profile_image_url_https || "",
+  handle:      (u.userName || u.username || u.screen_name || "").replace(/^@/, ""),
+  followers:   u.followers       || u.followers_count  || u.followersCount  || u.public_metrics?.followers_count || 0,
+  following:   u.following       || u.friends_count    || u.followingCount  || u.public_metrics?.following_count || 0,
+  tweets:      u.statusesCount   || u.statuses_count   || u.tweetsCount     || u.public_metrics?.tweet_count     || 0,
+  bio:         u.description || u.profile_bio?.description || u.bio || "",
+  verified:    !!(u.isBlueVerified || u.is_blue_verified || u.blueVerified || u.verified || u.isVerified),
+  blueVerified:!!(u.isBlueVerified || u.is_blue_verified || u.blueVerified),
+  avatar:      u.profilePicture  || u.profile_image_url || u.profileImageUrl || u.profile_image_url_https || "",
   location:    u.location || "",
-  createdAt:   u.created_at || u.createdAt || "",
+  createdAt:   u.createdAt || u.created_at || "",
 })
 
 const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -393,7 +394,7 @@ export default function NicheFinderX() {
   }
 
   // ── UPDATE SYSTEM ──────────────────────────────────────────
-  const CURRENT_VERSION = "1.05"
+  const CURRENT_VERSION = "1.07"
   const VERSION_URL     = "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/version.json"
 
   const parseVer = v => v.split(".").map(Number).reduce((a,n,i) => a + n * Math.pow(100, 2-i), 0)
@@ -538,7 +539,7 @@ export default function NicheFinderX() {
         setProgress(Math.min(88, 5 + (page / maxPages) * 83))
 
         const res = await fetch(url.toString(), {
-          headers: { "X-API-Key": apiKey.trim(), "Content-Type": "application/json" }
+          headers: { "X-API-Key": apiKey.trim() }
         })
 
         if (res.status === 401) throw new Error("Invalid API key. Check your TwitterAPI.io credentials.")
@@ -549,7 +550,9 @@ export default function NicheFinderX() {
         const raw  = data.users || data.data?.users || data.results || data.data || []
         const users = Array.isArray(raw) ? raw : []
 
-        if (!users.length && page === 0) throw new Error("No users returned. Check your query or API key.")
+        if (!users.length && page === 0) throw new Error(
+          "No users returned for this query. Try: a shorter/broader keyword, fewer words, or lower the Min Followers slider."
+        )
 
         users.forEach(u => {
           const p = parseUser(u)
@@ -1462,7 +1465,7 @@ export default function NicheFinderX() {
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <span style={{ fontSize:11, color:B.muted, fontFamily:"'Fira Code',monospace" }}>
-            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.06</span>
+            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.07</span>
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <a href="https://getorbix.com" target="_blank" rel="noopener noreferrer"
