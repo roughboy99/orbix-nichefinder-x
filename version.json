@@ -23,5 +23,6 @@
   },
   "minNodeVersion": "18",
   "repoUrl": "https://github.com/roughboy99/orbix-nichefinder-x",
-  "documentation": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/docs/orbix-nichefinder-x-docs-v1.07.docx"
+  "documentation": "https://github.com/roughboy99/orbix-nichefinder-x/raw/main/docs/orbix-nichefinder-x-docs-v1.07.pdf",
+  "documentationFormat": "PDF"
 }
