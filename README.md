@@ -72,7 +72,7 @@ orbix-nichefinder-x/
 ├── app/
 │   └── orbix-nichefinder-x.jsx           ← Main React app (v1.05)
 ├── docs/
-│   └── orbix-nichefinder-x-docs-v1.07.docx  ← Full documentation (Rev 1.07)
+│   └── orbix-nichefinder-x-docs-v1.07.pdf  ← Full documentation (Rev 1.07)
 ├── installer/
 │   ├── INSTALL.bat                        ← Windows launcher
 │   ├── NicheFinderX-Setup.ps1            ← Windows installer script
@@ -113,7 +113,7 @@ Requires a [TwitterAPI.io](https://twitterapi.io?ref=roughboy666) API key. Free 
 
 ## 📖 Documentation
 
-Full setup, usage, and installation guide: [`orbix-nichefinder-x-docs-v1.07.docx`](docs/orbix-nichefinder-x-docs-v1.07.docx)
+Full setup, usage, and installation guide: [`orbix-nichefinder-x-docs-v1.07.pdf`](docs/orbix-nichefinder-x-docs-v1.07.pdf)
 
 **Covers:** Windows / macOS / Linux installation, Docker deployment, auto-update system, CSV export, GitHub repository, troubleshooting, version history.
 
