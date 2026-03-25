@@ -1,7 +1,12 @@
 {
-  "version": "1.05",
+  "version": "1.06",
   "releaseDate": "2025-03-25",
   "changelog": [
+    "v1.06: API key validation with visual indicator (green checkmark / red X)",
+    "v1.06: AES-256-GCM encrypted API key storage in localStorage",
+    "v1.06: Proxy health-check banner \u2014 alerts if vite.config.js missing proxy",
+    "v1.06: Vite proxy fix \u2014 routes /twitterapi/* server-side, eliminates CORS errors",
+    "v1.06: Input border color respects validation state on focus/blur",
     "Added GitHub auto-update system with startup check toggle",
     "Added manual Check for Updates button",
     "Added one-click update download with auto-install scripts (Windows .bat + macOS/Linux .sh)",
