@@ -159,19 +159,27 @@ const Btn = ({ children, onClick, disabled, variant="primary", size="md", style=
 // ─────────────────────────────────────────────
 // INPUT COMPONENT
 // ─────────────────────────────────────────────
-const Input = ({ value, onChange, placeholder, type="text", style={}, readOnly=false }) => (
-  <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-    type={type} readOnly={readOnly}
-    style={{
-      background:B.bg, border:`1px solid ${B.border}`, borderRadius:8, color:B.white,
-      padding:"8px 12px", fontSize:13, width:"100%", outline:"none", fontFamily:"inherit",
-      boxSizing:"border-box", transition:"border-color 0.15s",
-      ...(readOnly ? { cursor:"default", color:B.silver } : {}), ...style,
-    }}
-    onFocus={e  => { e.target.style.borderColor = B.blueHi }}
-    onBlur={e   => { e.target.style.borderColor = B.border  }}
-  />
-)
+const Input = ({ value, onChange, placeholder, type="text", style={}, readOnly=false }) => {
+  // Preserve any explicit borderColor passed via style prop on focus/blur
+  const getBorderColor = (el, isFocus) => {
+    const explicit = style?.borderColor
+    if (explicit && explicit !== B.border) return explicit   // validation color wins
+    return isFocus ? B.blueHi : B.border
+  }
+  return (
+    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+      type={type} readOnly={readOnly}
+      style={{
+        background:B.bg, border:`1px solid ${B.border}`, borderRadius:8, color:B.white,
+        padding:"8px 12px", fontSize:13, width:"100%", outline:"none", fontFamily:"inherit",
+        boxSizing:"border-box", transition:"border-color 0.2s",
+        ...(readOnly ? { cursor:"default", color:B.silver } : {}), ...style,
+      }}
+      onFocus={e  => { e.target.style.borderColor = getBorderColor(e.target, true)  }}
+      onBlur={e   => { e.target.style.borderColor = getBorderColor(e.target, false) }}
+    />
+  )
+}
 
 // ─────────────────────────────────────────────
 // SECTION CARD
@@ -346,23 +354,37 @@ export default function NicheFinderX() {
     setKeyStatus("validating")
     try {
       const res = await fetch("/twitterapi/twitter/user/info?userName=x", {
-        headers: { "X-API-Key": key.trim(), "Content-Type": "application/json" }
+        headers: { "X-API-Key": key.trim() }
       })
       if (res.status === 401 || res.status === 403) {
-        setKeyStatus("invalid"); return
+        setKeyStatus("invalid")
+        return
       }
-      // Any response other than network failure = key is accepted by the API
+      // 200, 404 (user not found but key works), 429 (rate limit but key works)
+      // — all mean the API accepted the key
       setKeyStatus("valid")
       await saveApiKey(key.trim())
     } catch(e) {
-      // Network error on validation — don't penalise, just mark idle
-      setKeyStatus("idle")
+      // Pure network failure (proxy not running, CORS on direct call, offline)
+      // — mark invalid so user knows something is wrong
+      setKeyStatus("invalid")
     }
   }
 
-  // Load saved key on mount
+  // Track proxy availability
+  const [proxyOK, setProxyOK] = useState(true)
+
+  // Load saved key + check proxy on mount
   useEffect(() => {
     loadApiKey().then(k => { if (k) { setApiKey(k); setKeyStatus("valid") } })
+
+    // Quick proxy health-check — if /twitterapi path 404s it means proxy is active
+    // If it throws a TypeError (network error / CORS) proxy is not configured
+    fetch("/twitterapi/twitter/user/info?userName=test", {
+      headers: { "X-API-Key": "test" }
+    })
+      .then(() => setProxyOK(true))
+      .catch(() => setProxyOK(false))
   }, [])
 
   const showToast = (msg, type="success") => {
@@ -773,8 +795,23 @@ export default function NicheFinderX() {
               <b>Get your key at{" "}</b>
               <a href="https://twitterapi.io?ref=roughboy666" target="_blank" rel="noopener noreferrer"
                 style={{ color:B.goldHi, textDecoration:"underline" }}>twitterapi.io</a>
-              {" "}— Key is stored encrypted on this device using AES-256.
+              {" "}— Key stored encrypted on this device (AES-256).
             </div>
+
+            {/* Proxy warning — only shows if dev server proxy is not configured */}
+            {!proxyOK && (
+              <div style={{ marginTop:8, padding:"10px 12px", background:`${B.error}12`,
+                border:`1px solid ${B.error}44`, borderRadius:8, fontSize:11,
+                color:B.error, lineHeight:1.7 }}>
+                <b>⚠ API connection issue detected.</b> The app must be launched with{" "}
+                <code style={{fontFamily:"monospace",background:`${B.error}22`,padding:"1px 4px",borderRadius:3}}>
+                  npm run dev
+                </code>{" "}
+                from your install folder — not opened directly in a browser.
+                If you already did that, <b>delete vite.config.js</b> from your install folder
+                and re-run the installer to get the updated version with API proxy support.
+              </div>
+            )}
           </Card>
 
           {/* SEARCH CONFIG */}
@@ -1425,7 +1462,7 @@ export default function NicheFinderX() {
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <span style={{ fontSize:11, color:B.muted, fontFamily:"'Fira Code',monospace" }}>
-            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.05</span>
+            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.06</span>
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <a href="https://getorbix.com" target="_blank" rel="noopener noreferrer"
