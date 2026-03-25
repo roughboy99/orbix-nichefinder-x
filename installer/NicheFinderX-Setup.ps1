@@ -263,19 +263,35 @@ Write-Host ""
 
 Push-Location $appDir
 try {
-    $proc = Start-Process npm -ArgumentList "install" -WorkingDirectory $appDir -Wait -PassThru -WindowStyle Normal
-    if ($proc.ExitCode -ne 0) {
-        Write-Fail "npm install failed (exit code $($proc.ExitCode))"
+    # Run npm install directly in the current PowerShell session (PATH is inherited correctly)
+    $npmPath = (Get-Command npm -ErrorAction Stop).Source
+    Write-Info "npm found at: $npmPath"
+    & $npmPath install
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "npm install failed (exit code $LASTEXITCODE)"
         Pop-Location
         Read-Host "  Press ENTER to exit"
         exit 1
     }
     Write-OK "npm packages installed successfully"
 } catch {
-    Write-Fail "npm install error: $_"
-    Pop-Location
-    Read-Host "  Press ENTER to exit"
-    exit 1
+    # Fallback: try npm directly by name
+    try {
+        npm install
+        if ($LASTEXITCODE -ne 0) {
+            Write-Fail "npm install failed (exit code $LASTEXITCODE)"
+            Pop-Location
+            Read-Host "  Press ENTER to exit"
+            exit 1
+        }
+        Write-OK "npm packages installed successfully"
+    } catch {
+        Write-Fail "npm install error: $_"
+        Write-Info "Try running manually: cd `"$appDir`" && npm install"
+        Pop-Location
+        Read-Host "  Press ENTER to exit"
+        exit 1
+    }
 }
 Pop-Location
 
