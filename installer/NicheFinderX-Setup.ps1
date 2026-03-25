@@ -207,6 +207,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    strictPort: false,
     open: true,
   }
 })
@@ -299,7 +300,7 @@ Pop-Location
 Write-Step "STEP 6 — Creating Launcher"
 Write-Div
 
-$launcherContent = "@echo off`r`ntitle Orbix NicheFinder X`r`ncd /d `"$appDir`"`r`necho.`r`necho   Orbix NicheFinder X v1.05 - Starting...`r`necho   Open your browser at: http://localhost:5173`r`necho   Press Ctrl+C to stop the server`r`necho.`r`nnpm run dev`r`npause`r`n"
+$launcherContent = "@echo off`r`ntitle Orbix NicheFinder X`r`ncd /d `"$appDir`"`r`necho.`r`necho   Orbix NicheFinder X v1.05 - Starting...`r`necho   Vite opens your browser automatically.`r`necho   If port 5173 is busy, Vite picks the next free port.`r`necho   Check the output below for the actual URL.`r`necho   Press Ctrl+C to stop the server`r`necho.`r`nnpm run dev`r`npause`r`n"
 $launcherPath = Join-Path $appDir "NicheFinderX-Start.bat"
 Set-Content -Path $launcherPath -Value $launcherContent -Encoding ASCII
 Write-OK "Launcher created: NicheFinderX-Start.bat"
@@ -368,7 +369,7 @@ Write-Host "  ║   " -NoNewline -ForegroundColor Green
 Write-Host "• Or Start Menu > Orbix > NicheFinder X" -NoNewline -ForegroundColor Cyan
 Write-Host "            ║" -ForegroundColor Green
 Write-Host "  ║   " -NoNewline -ForegroundColor Green
-Write-Host "• Browser opens at http://localhost:5173" -NoNewline -ForegroundColor Cyan
+Write-Host "• Vite opens your browser automatically" -NoNewline -ForegroundColor Cyan
 Write-Host "            ║" -ForegroundColor Green
 Write-Host "  ║                                                          ║" -ForegroundColor Green
 Write-Host "  ║   You need a TwitterAPI.io key to run searches.          ║" -ForegroundColor Green
@@ -379,7 +380,7 @@ Write-Host ""
 
 $launch = Read-Host "  Launch NicheFinder X now? (Y/N)"
 if ($launch.ToUpper() -eq "Y") {
-    Write-Info "Starting server — browser will open at http://localhost:5173"
+    Write-Info "Starting server — Vite opens your browser automatically (port 5173 or next free)"
     Start-Process $launcherPath
 }
 
