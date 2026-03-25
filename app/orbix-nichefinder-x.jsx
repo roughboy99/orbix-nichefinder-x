@@ -319,6 +319,10 @@ export default function NicheFinderX() {
     }
   }
 
+  // Detect platform for platform-aware updater download
+  const isWindows = navigator.platform?.toLowerCase().includes("win") ||
+                    navigator.userAgent?.toLowerCase().includes("windows")
+
   const downloadUpdate = async () => {
     if (!updateInfo) return
     setUpdateStatus("downloading")
@@ -331,22 +335,27 @@ export default function NicheFinderX() {
       const jsxUrl  = URL.createObjectURL(jsxBlob)
       const jsxA    = document.createElement("a")
       jsxA.href     = jsxUrl
-      jsxA.download  = "orbix-nichefinder-x.jsx"
+      jsxA.download = "orbix-nichefinder-x.jsx"
       jsxA.click()
       URL.revokeObjectURL(jsxUrl)
       await new Promise(r => setTimeout(r, 800))
 
-      // 2. Download the update .bat
-      const batRes  = await fetch(updateInfo.files.updater)
-      if (!batRes.ok) throw new Error("Failed to download updater")
-      const batText = await batRes.text()
-      const batBlob = new Blob([batText], { type: "text/plain" })
-      const batUrl  = URL.createObjectURL(batBlob)
-      const batA    = document.createElement("a")
-      batA.href     = batUrl
-      batA.download  = "NicheFinderX-Update.bat"
-      batA.click()
-      URL.revokeObjectURL(batUrl)
+      // 2. Download platform-correct updater
+      const updaterUrl  = isWindows
+        ? updateInfo.files.updaterWindows
+        : updateInfo.files.updaterMacLinux
+      const updaterName = isWindows ? "NicheFinderX-Update.bat" : "NicheFinderX-Update.sh"
+
+      const updRes  = await fetch(updaterUrl || updateInfo.files.updaterWindows)
+      if (!updRes.ok) throw new Error("Failed to download updater")
+      const updText = await updRes.text()
+      const updBlob = new Blob([updText], { type: "text/plain" })
+      const updUrl  = URL.createObjectURL(updBlob)
+      const updA    = document.createElement("a")
+      updA.href     = updUrl
+      updA.download = updaterName
+      updA.click()
+      URL.revokeObjectURL(updUrl)
 
       setUpdateStatus("done")
     } catch(e) {
@@ -1104,8 +1113,10 @@ export default function NicheFinderX() {
                   Two files downloaded to your Downloads folder:
                 </div>
                 {[
-                  ["orbix-nichefinder-x.jsx", "The updated app file"],
-                  ["NicheFinderX-Update.bat",  "Auto-installer — run this next"],
+                  ["orbix-nichefinder-x.jsx",
+                   "The updated app file"],
+                  [isWindows ? "NicheFinderX-Update.bat" : "NicheFinderX-Update.sh",
+                   "Auto-installer — run this next"],
                 ].map(([f,d],i) => (
                   <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                     <span style={{ width:18, height:18, borderRadius:"50%", background:B.blue,
@@ -1119,8 +1130,12 @@ export default function NicheFinderX() {
                 ))}
                 <div style={{ marginTop:12, padding:"10px 12px", background:`${B.gold}11`,
                   border:`1px solid ${B.gold}44`, borderRadius:8, fontSize:11, color:B.gold, lineHeight:1.6 }}>
-                  <b>To install:</b> Double-click <code style={{fontFamily:"monospace"}}>NicheFinderX-Update.bat</code> in your Downloads folder.
-                  It will replace the app file and restart the server automatically.
+                  {isWindows ? (
+                    <><b>To install:</b> Double-click <code style={{fontFamily:"monospace"}}>NicheFinderX-Update.bat</code> in your Downloads folder.</>
+                  ) : (
+                    <><b>To install:</b> Open Terminal, run: <code style={{fontFamily:"monospace"}}>chmod +x ~/Downloads/NicheFinderX-Update.sh && ~/Downloads/NicheFinderX-Update.sh</code></>
+                  )}
+                  {" "}It will replace the app file and restart the server automatically.
                 </div>
               </div>
             )}
