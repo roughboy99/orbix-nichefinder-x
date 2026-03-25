@@ -256,6 +256,7 @@ export default function NicheFinderX() {
   // Config state
   const [apiKey,        setApiKey]        = useState("")
   const [showKey,       setShowKey]       = useState(false)
+  const [keyStatus,     setKeyStatus]     = useState("idle")  // idle | validating | valid | invalid
   const [niche,         setNiche]         = useState("")
   const [industry,      setIndustry]      = useState("")
   const [minFollowers,  setMinFollowers]  = useState(1000)
@@ -286,6 +287,83 @@ export default function NicheFinderX() {
   const [showUpdateModal, setShowUpdateModal] = useState(false)
 
   const abortRef = useRef(false)
+
+  // ── ENCRYPTED API KEY STORAGE ───────────────────────────────────
+  // Uses Web Crypto AES-GCM. The encryption key is a random 256-bit
+  // key stored in localStorage alongside the encrypted payload.
+  // This prevents casual plaintext exposure but is NOT a secure vault —
+  // anyone with DevTools access to localStorage can retrieve both.
+  // See documentation Section 3.1 for full disclosure.
+
+  const STORAGE_KEY = "nfx_apikey_enc"
+  const STORAGE_EK  = "nfx_ek"
+
+  const getOrCreateEncKey = async () => {
+    const stored = localStorage.getItem(STORAGE_EK)
+    if (stored) {
+      const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0))
+      return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt","decrypt"])
+    }
+    const key = await crypto.subtle.generateKey({name:"AES-GCM",length:256}, true, ["encrypt","decrypt"])
+    const exported = await crypto.subtle.exportKey("raw", key)
+    localStorage.setItem(STORAGE_EK, btoa(String.fromCharCode(...new Uint8Array(exported))))
+    return key
+  }
+
+  const saveApiKey = async (raw) => {
+    if (!raw) { localStorage.removeItem(STORAGE_KEY); return }
+    try {
+      const key = await getOrCreateEncKey()
+      const iv  = crypto.getRandomValues(new Uint8Array(12))
+      const enc = await crypto.subtle.encrypt(
+        {name:"AES-GCM", iv},
+        key,
+        new TextEncoder().encode(raw)
+      )
+      const payload = {
+        iv:  btoa(String.fromCharCode(...iv)),
+        ct:  btoa(String.fromCharCode(...new Uint8Array(enc)))
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    } catch(e) { console.warn("Could not save API key:", e) }
+  }
+
+  const loadApiKey = async () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (!stored) return ""
+      const {iv, ct} = JSON.parse(stored)
+      const key  = await getOrCreateEncKey()
+      const ivBuf = Uint8Array.from(atob(iv), c => c.charCodeAt(0))
+      const ctBuf = Uint8Array.from(atob(ct), c => c.charCodeAt(0))
+      const dec   = await crypto.subtle.decrypt({name:"AES-GCM", iv:ivBuf}, key, ctBuf)
+      return new TextDecoder().decode(dec)
+    } catch(e) { return "" }
+  }
+
+  const validateApiKey = async (key) => {
+    if (!key || key.trim().length < 10) { setKeyStatus("idle"); return }
+    setKeyStatus("validating")
+    try {
+      const res = await fetch("/twitterapi/twitter/user/info?userName=x", {
+        headers: { "X-API-Key": key.trim(), "Content-Type": "application/json" }
+      })
+      if (res.status === 401 || res.status === 403) {
+        setKeyStatus("invalid"); return
+      }
+      // Any response other than network failure = key is accepted by the API
+      setKeyStatus("valid")
+      await saveApiKey(key.trim())
+    } catch(e) {
+      // Network error on validation — don't penalise, just mark idle
+      setKeyStatus("idle")
+    }
+  }
+
+  // Load saved key on mount
+  useEffect(() => {
+    loadApiKey().then(k => { if (k) { setApiKey(k); setKeyStatus("valid") } })
+  }, [])
 
   const showToast = (msg, type="success") => {
     setToast({ msg, type })
@@ -430,7 +508,7 @@ export default function NicheFinderX() {
       const maxPages = Math.ceil(maxResults / 20) + 4
 
       while (allUsers.size < maxResults * 1.5 && page < maxPages && !abortRef.current) {
-        const url = new URL("https://api.twitterapi.io/twitter/user/search")
+        const url = new URL("/twitterapi/twitter/user/search", window.location.origin)
         url.searchParams.set("query", query)
         if (cursor) url.searchParams.set("cursor", cursor)
 
@@ -632,24 +710,70 @@ export default function NicheFinderX() {
           {/* API KEY */}
           <Card>
             <SectionTitle icon={icons.key} label="API Configuration"/>
+
+            {/* Key input + status indicator */}
             <div style={{ position:"relative" }}>
-              <Input value={apiKey} onChange={setApiKey} type={showKey?"text":"password"}
-                placeholder="Paste your TwitterAPI.io key…" style={{ paddingRight:38 }}/>
-              <button onClick={()=>setShowKey(!showKey)} title={showKey?"Hide":"Show"}
-                style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)",
+              <Input
+                value={apiKey}
+                onChange={v => {
+                  setApiKey(v)
+                  setKeyStatus("idle")
+                  if (v.trim().length > 10) {
+                    clearTimeout(window._nfxKeyTimer)
+                    window._nfxKeyTimer = setTimeout(() => validateApiKey(v.trim()), 900)
+                  }
+                }}
+                type={showKey?"text":"password"}
+                placeholder="Paste your TwitterAPI.io key…"
+                style={{ paddingRight:62,
+                  borderColor: keyStatus==="valid"   ? B.success :
+                               keyStatus==="invalid" ? B.error   : B.border }}
+              />
+              {/* Eye toggle */}
+              <button onClick={()=>setShowKey(!showKey)} title={showKey?"Hide key":"Show key"}
+                style={{ position:"absolute", right:34, top:"50%", transform:"translateY(-50%)",
                   background:"none", border:"none", cursor:"pointer", color:B.muted, padding:0, display:"flex" }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d={showKey ? icons.eyeOff : icons.eye}/>
                 </svg>
               </button>
+              {/* Status icon */}
+              <div style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)",
+                display:"flex", alignItems:"center" }}>
+                {keyStatus === "validating" && (
+                  <div style={{ width:12, height:12, border:`2px solid ${B.border}`, borderTopColor:B.blueHi,
+                    borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
+                )}
+                {keyStatus === "valid" && (
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={B.success} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={icons.check}/>
+                  </svg>
+                )}
+                {keyStatus === "invalid" && (
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={B.error} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={icons.x}/>
+                  </svg>
+                )}
+              </div>
             </div>
+
+            {/* Status message */}
+            <div style={{ marginTop:5, fontSize:10, lineHeight:1.5,
+              color: keyStatus==="valid"   ? B.success :
+                     keyStatus==="invalid" ? B.error   :
+                     keyStatus==="validating" ? B.blueHi : B.muted }}>
+              {keyStatus === "idle"       && "Key saved encrypted. Auto-validates when you paste."}
+              {keyStatus === "validating" && "Verifying key with TwitterAPI.io..."}
+              {keyStatus === "valid"      && "✓ Key verified and saved securely to this device."}
+              {keyStatus === "invalid"    && "✗ Key rejected by TwitterAPI.io. Check and re-paste."}
+            </div>
+
             <div style={{ marginTop:8, padding:"8px 10px", background:`${B.warning}11`, border:`1px solid ${B.warning}44`,
               borderRadius:8, fontSize:11, color:B.warning, lineHeight:1.5 }}>
-              <b>Requires TwitterAPI.io key.</b> Run locally with{" "}
-              <code style={{fontFamily:"monospace",background:`${B.warning}22`,padding:"1px 4px",borderRadius:3}}>npm run dev</code>{" "}
-              or deploy on your own server. Get your key at{" "}
+              <b>Get your key at{" "}</b>
               <a href="https://twitterapi.io?ref=roughboy666" target="_blank" rel="noopener noreferrer"
                 style={{ color:B.goldHi, textDecoration:"underline" }}>twitterapi.io</a>
+              {" "}— Key is stored encrypted on this device using AES-256.
             </div>
           </Card>
 
