@@ -36,6 +36,90 @@ Write-Host "      |" -ForegroundColor DarkCyan
 Write-Host "  +============================================================+" -ForegroundColor DarkCyan
 Write-Host ""
 
+# --- INSTALLATION METHOD ---
+Write-Host ""
+Write-Host "  Choose your installation method:" -ForegroundColor White
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[1]" -NoNewline -ForegroundColor Cyan
+Write-Host "  npm " -NoNewline -ForegroundColor White
+Write-Host "(RECOMMENDED)" -NoNewline -ForegroundColor Green
+Write-Host " - one command, automatic updates"
+Write-Host "      Install: npm install -g orbix-nichefinder-x" -ForegroundColor Gray
+Write-Host "      Run:     nichefinder" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[2]" -NoNewline -ForegroundColor Cyan
+Write-Host "  Full Installer" -NoNewline -ForegroundColor White
+Write-Host " - installs Node.js if missing, creates Desktop shortcut"
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[3]" -NoNewline -ForegroundColor Cyan
+Write-Host "  Exit"
+Write-Host ""
+
+$method = Read-Host "  Enter 1, 2 or 3"
+
+if ($method -eq "1") {
+    Write-Host ""
+    Write-Step "Installing via npm..."
+    Write-Host ""
+
+    $nodeExists = $null
+    try { $nodeExists = (Get-Command node -ErrorAction Stop).Source } catch {}
+
+    if (-not $nodeExists) {
+        Write-Fail "Node.js not found."
+        Write-Info "Download from: https://nodejs.org"
+        Write-Info "Install Node.js 18 LTS, then run this installer again."
+        Write-Host ""
+        Read-Host "  Press ENTER to exit"
+        exit 1
+    }
+    $nodeVer = (node --version 2>$null)
+    Write-OK "Node.js $nodeVer found"
+    Write-Host ""
+    Write-Info "Running: npm install -g orbix-nichefinder-x"
+    Write-Info "(This may take 30-60 seconds on first run...)"
+    Write-Host ""
+
+    $npmPath = (Get-Command npm -ErrorAction Stop).Source
+    & $npmPath install -g orbix-nichefinder-x
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "npm install failed. Check your internet connection."
+        Read-Host "  Press ENTER to exit"
+        exit 1
+    }
+
+    Write-Host ""
+    Write-Host "  +============================================================+" -ForegroundColor Green
+    Write-Host "  |   INSTALLATION COMPLETE                                    |" -ForegroundColor Green
+    Write-Host "  |                                                            |" -ForegroundColor Green
+    Write-Host "  |   Run anytime:   nichefinder                               |" -ForegroundColor Green
+    Write-Host "  |   Update:        npm update -g orbix-nichefinder-x         |" -ForegroundColor Green
+    Write-Host "  |   Uninstall:     npm uninstall -g orbix-nichefinder-x      |" -ForegroundColor Green
+    Write-Host "  |   API key:       twitterapi.io?ref=roughboy666              |" -ForegroundColor Green
+    Write-Host "  +============================================================+" -ForegroundColor Green
+    Write-Host ""
+
+    $launch = Read-Host "  Launch NicheFinder X now? (Y/N)"
+    if ($launch.ToUpper() -eq "Y") {
+        Write-Info "Starting..."
+        Start-Process cmd -ArgumentList "/c nichefinder"
+    }
+    exit 0
+}
+elseif ($method -eq "3") {
+    Write-Info "Installation cancelled."
+    exit 0
+}
+elseif ($method -ne "2") {
+    Write-Fail "Invalid choice. Run the installer again and enter 1, 2 or 3."
+    Read-Host "  Press ENTER to exit"
+    exit 1
+}
+
+Write-Host ""
+Write-Info "Continuing with full installer..."
+Write-Host ""
+
 # --- STEP 1 - CHOOSE INSTALL LOCATION ---
 Write-Step "STEP 1 - Installation Location"
 Write-Div
