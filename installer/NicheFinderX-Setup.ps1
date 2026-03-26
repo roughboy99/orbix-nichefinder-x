@@ -36,8 +36,151 @@ Write-Host "      |" -ForegroundColor DarkCyan
 Write-Host "  +============================================================+" -ForegroundColor DarkCyan
 Write-Host ""
 
-# --- INSTALLATION METHOD ---
-Write-Host ""
+# --- DETECT EXISTING INSTALLATION ---
+$npmInstalled  = $false
+$fullInstalled = $false
+$fullInstDir   = ""
+$installedVia  = ""
+
+# Check npm install (nichefinder command exists)
+try {
+    $nfCmd = Get-Command nichefinder -ErrorAction Stop
+    $npmInstalled = $true
+    $installedVia = "npm"
+} catch {}
+
+# Check full install (NicheFinderX directory with jsx file)
+$candidates = @(
+    (Join-Path $env:USERPROFILE "NicheFinderX"),
+    (Join-Path $env:LOCALAPPDATA "NicheFinderX"),
+    "C:\NicheFinderX"
+)
+foreach ($c in $candidates) {
+    if (Test-Path (Join-Path $c "src\orbix-nichefinder-x.jsx")) {
+        $fullInstalled = $true
+        $fullInstDir   = $c
+        $installedVia  = if ($npmInstalled) { "both" } else { "full" }
+        break
+    }
+}
+
+# --- EXISTING INSTALL DETECTED ---
+if ($npmInstalled -or $fullInstalled) {
+    Write-Host ""
+    Write-Host "  +============================================================+" -ForegroundColor Yellow
+    Write-Host "  |                                                            |" -ForegroundColor Yellow
+    Write-Host "  |   " -NoNewline -ForegroundColor Yellow
+    Write-Host "NicheFinder X is already installed on this computer." -NoNewline -ForegroundColor White
+    Write-Host "   |" -ForegroundColor Yellow
+    if ($npmInstalled)  { Write-Host "  |   via npm:       nichefinder command found" -ForegroundColor Yellow }
+    if ($fullInstalled) { Write-Host "  |   via installer: $fullInstDir" -ForegroundColor Yellow }
+    Write-Host "  |                                                            |" -ForegroundColor Yellow
+    Write-Host "  +============================================================+" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "  What would you like to do?" -ForegroundColor White
+    Write-Host ""
+    Write-Host "  " -NoNewline; Write-Host "[1]" -NoNewline -ForegroundColor Green
+    Write-Host "  Update" -NoNewline -ForegroundColor White
+    Write-Host " - launch the app and update from inside (recommended)"
+    Write-Host "      The app checks GitHub and downloads updates automatically." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  " -NoNewline; Write-Host "[2]" -NoNewline -ForegroundColor Red
+    Write-Host "  Uninstall" -NoNewline -ForegroundColor White
+    Write-Host " - remove NicheFinder X from this computer"
+    Write-Host ""
+    Write-Host "  " -NoNewline; Write-Host "[3]" -NoNewline -ForegroundColor Cyan
+    Write-Host "  Fresh Install" -NoNewline -ForegroundColor White
+    Write-Host " - reinstall from scratch (overwrites existing)"
+    Write-Host ""
+    Write-Host "  " -NoNewline; Write-Host "[4]" -NoNewline -ForegroundColor Gray
+    Write-Host "  Exit"
+    Write-Host ""
+
+    $existChoice = Read-Host "  Enter 1, 2, 3 or 4"
+
+    # --- UPDATE ---
+    if ($existChoice -eq "1") {
+        Write-Host ""
+        Write-OK "Launching NicheFinder X for update..."
+        Write-Host ""
+        Write-Info "The app will open in your browser."
+        Write-Info "Click 'Check for Updates' or wait for the startup auto-check."
+        Write-Info "Follow the on-screen instructions to download and install."
+        Write-Host ""
+        if ($npmInstalled) {
+            Start-Process cmd -ArgumentList "/c nichefinder"
+        } elseif ($fullInstalled) {
+            $launcher = Join-Path $fullInstDir "NicheFinderX-Start.bat"
+            if (Test-Path $launcher) {
+                Start-Process $launcher
+            } else {
+                Start-Process cmd -ArgumentList "/c cd /d `"$fullInstDir`" && npm run dev"
+            }
+        }
+        Write-Host ""
+        Read-Host "  Press ENTER to exit the installer"
+        exit 0
+    }
+
+    # --- UNINSTALL ---
+    elseif ($existChoice -eq "2") {
+        Write-Host ""
+        Write-Warn "Uninstalling NicheFinder X..."
+        Write-Host ""
+
+        if ($npmInstalled) {
+            Write-Info "Running: npm uninstall -g orbix-nichefinder-x"
+            try {
+                $npmPath = (Get-Command npm -ErrorAction Stop).Source
+                & $npmPath uninstall -g orbix-nichefinder-x
+                Write-OK "npm package removed"
+            } catch { Write-Warn "npm uninstall failed - may need to run manually" }
+            $localApp = Join-Path $env:USERPROFILE ".nichefinder-x"
+            if (Test-Path $localApp) {
+                Remove-Item -Recurse -Force $localApp -ErrorAction SilentlyContinue
+                Write-OK "Local app files removed"
+            }
+        }
+
+        if ($fullInstalled) {
+            Write-Info "Removing: $fullInstDir"
+            Remove-Item -Recurse -Force $fullInstDir -ErrorAction SilentlyContinue
+            Write-OK "App directory removed"
+            $desktopSC = Join-Path ([Environment]::GetFolderPath("Desktop")) "NicheFinder X.lnk"
+            if (Test-Path $desktopSC) { Remove-Item $desktopSC -Force; Write-OK "Desktop shortcut removed" }
+            $smDir = Join-Path ([Environment]::GetFolderPath("Programs")) "Orbix"
+            if (Test-Path $smDir) { Remove-Item -Recurse -Force $smDir; Write-OK "Start Menu entry removed" }
+        }
+
+        Write-Host ""
+        Write-Host "  +============================================================+" -ForegroundColor Green
+        Write-Host "  |   UNINSTALL COMPLETE                                       |" -ForegroundColor Green
+        Write-Host "  |   NicheFinder X has been removed. Node.js was NOT removed. |" -ForegroundColor Green
+        Write-Host "  +============================================================+" -ForegroundColor Green
+        Write-Host ""
+        Read-Host "  Press ENTER to exit"
+        exit 0
+    }
+
+    # --- EXIT ---
+    elseif ($existChoice -eq "4") {
+        Write-Info "Exiting."
+        exit 0
+    }
+
+    # --- FRESH INSTALL (3) falls through ---
+    elseif ($existChoice -ne "3") {
+        Write-Fail "Invalid choice. Run again and enter 1, 2, 3 or 4."
+        Read-Host "  Press ENTER to exit"
+        exit 1
+    }
+
+    Write-Host ""
+    Write-Info "Proceeding with fresh install..."
+    Write-Host ""
+}
+
+# --- INSTALLATION METHOD (new install) ---
 Write-Host "  Choose your installation method:" -ForegroundColor White
 Write-Host ""
 Write-Host "  " -NoNewline; Write-Host "[1]" -NoNewline -ForegroundColor Cyan
