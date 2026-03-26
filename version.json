@@ -1,7 +1,11 @@
 {
-  "version": "1.07",
+  "version": "1.08",
   "releaseDate": "2025-03-25",
   "changelog": [
+    "v1.08: Fixed search \u2014 buildQuery now sends only niche keyword to API (not industry keywords which caused 0 results)",
+    "v1.08: Added debug logging to browser console for API response inspection",
+    "v1.08: Separate error messages for API-empty vs filter-empty results",
+    "v1.08: Post-loop filter-empty detection with specific actionable message",
     "v1.07: Fixed parseUser \u2014 field names now match actual TwitterAPI.io response schema",
     "v1.07: Removed Content-Type header from GET requests (was causing empty results)",
     "v1.07: Improved empty results error message with actionable suggestions",
