@@ -1,0 +1,51 @@
+{
+  "name": "orbix-nichefinder-x",
+  "version": "1.7.0",
+  "description": "Orbix NicheFinder X — Find, rank & export niche influencers on X/Twitter. The perfect companion to Andy Hafell's Content Mate.",
+  "keywords": [
+    "twitter",
+    "x",
+    "influencer",
+    "niche",
+    "social media",
+    "marketing",
+    "research",
+    "twitterapi",
+    "content-mate",
+    "orbix"
+  ],
+  "author": {
+    "name": "Hector Diaz",
+    "email": "hector@getorbix.com",
+    "url": "https://getorbix.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/roughboy99/orbix-nichefinder-x",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roughboy99/orbix-nichefinder-x.git"
+  },
+  "bugs": {
+    "url": "https://github.com/roughboy99/orbix-nichefinder-x/issues"
+  },
+  "bin": {
+    "nichefinder": "bin/nichefinder.js",
+    "nichefinder-x": "bin/nichefinder.js"
+  },
+  "main": "./bin/nichefinder.js",
+  "files": [
+    "bin/",
+    "app/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^6.3.5"
+  },
+  "preferGlobal": true
+}
