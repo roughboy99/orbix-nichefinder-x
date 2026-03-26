@@ -70,8 +70,119 @@ echo -e "  ${GRAY}Detected OS: ${WHITE}${OS_LABEL}${NC}"
 [[ "$OS" == "linux" ]] && echo -e "  ${GRAY}Package manager: ${WHITE}${PKG_MGR}${NC}"
 echo ""
 
+# ── DETECT EXISTING INSTALLATION ────────────────────────────
+NPM_INSTALLED=false
+FULL_INSTALLED=false
+FULL_INST_DIR=""
+
+# Check npm install
+if command -v nichefinder &>/dev/null; then
+    NPM_INSTALLED=true
+fi
+
+# Check full install
+CANDIDATES=("$HOME/NicheFinderX" "$HOME/Desktop/NicheFinderX" "$HOME/Documents/NicheFinderX" "/opt/NicheFinderX")
+for c in "${CANDIDATES[@]}"; do
+    if [[ -f "$c/src/orbix-nichefinder-x.jsx" ]]; then
+        FULL_INSTALLED=true
+        FULL_INST_DIR="$c"
+        break
+    fi
+done
+
+if [[ "$NPM_INSTALLED" == true ]] || [[ "$FULL_INSTALLED" == true ]]; then
+    echo ""
+    echo -e "  ${YELLOW}+============================================================+${NC}"
+    echo -e "  ${YELLOW}|                                                            |${NC}"
+    echo -e "  ${YELLOW}|   ${WHITE}NicheFinder X is already installed on this computer.${NC}   ${YELLOW}|${NC}"
+    [[ "$NPM_INSTALLED"  == true ]] && echo -e "  ${YELLOW}|   via npm:       nichefinder command found${NC}"
+    [[ "$FULL_INSTALLED" == true ]] && echo -e "  ${YELLOW}|   via installer: $FULL_INST_DIR${NC}"
+    echo -e "  ${YELLOW}|                                                            |${NC}"
+    echo -e "  ${YELLOW}+============================================================+${NC}"
+    echo ""
+    echo -e "  ${WHITE}What would you like to do?${NC}"
+    echo ""
+    echo -e "  ${GREEN}[1]${NC}  ${WHITE}Update${NC} -- launch the app and update from inside (recommended)"
+    echo -e "      The app checks GitHub and downloads updates automatically."
+    echo ""
+    echo -e "  ${RED}[2]${NC}  ${WHITE}Uninstall${NC} -- remove NicheFinder X from this computer"
+    echo ""
+    echo -e "  ${CYAN}[3]${NC}  ${WHITE}Fresh Install${NC} -- reinstall from scratch"
+    echo ""
+    echo -e "  ${GRAY}[4]${NC}  Exit"
+    echo ""
+    read -r -p "  Enter 1, 2, 3 or 4: " EXIST_CHOICE
+
+    case "$EXIST_CHOICE" in
+      1)
+        echo ""
+        ok "Launching NicheFinder X for update..."
+        echo ""
+        info "The app will open in your browser."
+        info "Click 'Check for Updates' or wait for the startup auto-check."
+        info "Follow the on-screen instructions to download and install."
+        echo ""
+        if [[ "$NPM_INSTALLED" == true ]]; then
+            nichefinder &
+        elif [[ "$FULL_INSTALLED" == true ]]; then
+            LAUNCHER="$FULL_INST_DIR/NicheFinderX-Start.sh"
+            if [[ -f "$LAUNCHER" ]]; then
+                bash "$LAUNCHER" &
+            else
+                (cd "$FULL_INST_DIR" && npm run dev &)
+            fi
+        fi
+        echo ""
+        read -r -p "  Press ENTER to exit the installer"
+        exit 0
+        ;;
+      2)
+        echo ""
+        warn "Uninstalling NicheFinder X..."
+        echo ""
+        if [[ "$NPM_INSTALLED" == true ]]; then
+            info "Running: npm uninstall -g orbix-nichefinder-x"
+            npm uninstall -g orbix-nichefinder-x && ok "npm package removed"
+            LOCAL_APP="$HOME/.nichefinder-x"
+            if [[ -d "$LOCAL_APP" ]]; then
+                rm -rf "$LOCAL_APP"
+                ok "Local app files removed"
+            fi
+        fi
+        if [[ "$FULL_INSTALLED" == true ]]; then
+            info "Removing: $FULL_INST_DIR"
+            rm -rf "$FULL_INST_DIR" && ok "App directory removed"
+            # macOS shortcut
+            [[ -f "$HOME/Desktop/NicheFinder X.command" ]] && rm -f "$HOME/Desktop/NicheFinder X.command" && ok "Desktop shortcut removed"
+            # Linux desktop entry
+            [[ -f "$HOME/.local/share/applications/nichefinder-x.desktop" ]] && rm -f "$HOME/.local/share/applications/nichefinder-x.desktop" && ok "App menu entry removed"
+        fi
+        echo ""
+        echo -e "  ${GREEN}+============================================================+${NC}"
+        echo -e "  ${GREEN}|   UNINSTALL COMPLETE                                       |${NC}"
+        echo -e "  ${GREEN}|   NicheFinder X removed. Node.js was NOT removed.          |${NC}"
+        echo -e "  ${GREEN}+============================================================+${NC}"
+        echo ""
+        exit 0
+        ;;
+      4)
+        info "Exiting."
+        exit 0
+        ;;
+      3)
+        echo ""
+        info "Proceeding with fresh install..."
+        echo ""
+        ;;
+      *)
+        fail "Invalid choice. Run again and enter 1, 2, 3 or 4."
+        exit 1
+        ;;
+    esac
+fi
+
 # ── INSTALLATION METHOD CHOOSER ─────────────────────────────
-echo -e "  ${WHITE}Choose your installation method:${NC}"
+echo -e "  ${WHITE}Choose your installation method:${NC}
 echo ""
 echo -e "  ${CYAN}[1]${NC}  ${WHITE}npm${NC} ${GREEN}(RECOMMENDED)${NC} -- one command, automatic updates"
 echo -e "      Install: npm install -g orbix-nichefinder-x"
