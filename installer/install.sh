@@ -66,9 +66,74 @@ echo -e "  ╚══════════════════════
 echo ""
 
 detect_os
-echo -e "  Detected OS: ${OS_LABEL}"
-[[ "$OS" == "linux" ]] && echo -e "  Package manager: ${PKG_MGR}"
+echo -e "  ${GRAY}Detected OS: ${WHITE}${OS_LABEL}${NC}"
+[[ "$OS" == "linux" ]] && echo -e "  ${GRAY}Package manager: ${WHITE}${PKG_MGR}${NC}"
 echo ""
+
+# ── INSTALLATION METHOD CHOOSER ─────────────────────────────
+echo -e "  ${WHITE}Choose your installation method:${NC}"
+echo ""
+echo -e "  ${CYAN}[1]${NC}  ${WHITE}npm${NC} ${GREEN}(RECOMMENDED)${NC} -- one command, automatic updates"
+echo -e "      Install: npm install -g orbix-nichefinder-x"
+echo -e "      Run:     nichefinder"
+echo ""
+echo -e "  ${CYAN}[2]${NC}  ${WHITE}Full Installer${NC} -- installs Node.js if missing, creates Desktop shortcut"
+echo ""
+echo -e "  ${CYAN}[3]${NC}  Exit"
+echo ""
+read -r -p "  Enter 1, 2 or 3: " METHOD
+
+case "$METHOD" in
+  1)
+    echo ""
+    step "Installing via npm..."
+    echo ""
+    if ! command -v node &>/dev/null; then
+      fail "Node.js not found."
+      info "Install Node.js 18+ from https://nodejs.org then run this installer again."
+      echo ""
+      exit 1
+    fi
+    ok "Node.js $(node --version) found"
+    echo ""
+    info "Running: npm install -g orbix-nichefinder-x"
+    info "(This may take 30-60 seconds on first run...)"
+    echo ""
+    npm install -g orbix-nichefinder-x
+    if [[ $? -ne 0 ]]; then
+      fail "npm install failed. Check your internet connection."
+      exit 1
+    fi
+    echo ""
+    echo -e "  ${GREEN}+============================================================+${NC}"
+    echo -e "  ${GREEN}|   INSTALLATION COMPLETE                                    |${NC}"
+    echo -e "  ${GREEN}|                                                            |${NC}"
+    echo -e "  ${GREEN}|   Run anytime:   nichefinder                               |${NC}"
+    echo -e "  ${GREEN}|   Update:        npm update -g orbix-nichefinder-x         |${NC}"
+    echo -e "  ${GREEN}|   Uninstall:     npm uninstall -g orbix-nichefinder-x      |${NC}"
+    echo -e "  ${GREEN}|   API key:       twitterapi.io?ref=roughboy666              |${NC}"
+    echo -e "  ${GREEN}+============================================================+${NC}"
+    echo ""
+    read -r -p "  Launch NicheFinder X now? (y/N): " LAUNCH
+    if [[ "${LAUNCH,,}" == "y" ]]; then
+      nichefinder
+    fi
+    exit 0
+    ;;
+  2)
+    echo ""
+    info "Continuing with full installer..."
+    echo ""
+    ;;
+  3)
+    info "Installation cancelled."
+    exit 0
+    ;;
+  *)
+    fail "Invalid choice. Run the installer again and enter 1, 2 or 3."
+    exit 1
+    ;;
+esac
 
 # ── STEP 1 — INSTALL LOCATION ───────────────────────────────
 step "STEP 1 — Installation Location"
