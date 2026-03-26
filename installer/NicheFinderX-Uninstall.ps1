@@ -39,6 +39,67 @@ Write-Host "  |                                                            |" -F
 Write-Host "  +============================================================+" -ForegroundColor Red
 Write-Host ""
 
+# --- UNINSTALL METHOD ---
+Write-Host ""
+Write-Host "  Choose your uninstall method:" -ForegroundColor White
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[1]" -NoNewline -ForegroundColor Cyan
+Write-Host "  npm uninstall" -NoNewline -ForegroundColor White
+Write-Host " - if you installed via npm"
+Write-Host "      Command: npm uninstall -g orbix-nichefinder-x" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[2]" -NoNewline -ForegroundColor Cyan
+Write-Host "  Full Uninstaller" -NoNewline -ForegroundColor White
+Write-Host " - if you used the PowerShell installer"
+Write-Host "      Removes app folder, shortcuts, and optionally Node.js"
+Write-Host ""
+Write-Host "  " -NoNewline; Write-Host "[3]" -NoNewline -ForegroundColor Cyan
+Write-Host "  Exit"
+Write-Host ""
+
+$umethod = Read-Host "  Enter 1, 2 or 3"
+
+if ($umethod -eq "1") {
+    Write-Host ""
+    Write-Step "Uninstalling via npm..."
+    Write-Host ""
+    $npmExists = $null
+    try { $npmExists = (Get-Command npm -ErrorAction Stop).Source } catch {}
+    if (-not $npmExists) {
+        Write-Fail "npm not found. Node.js may already be removed."
+        Read-Host "  Press ENTER to exit"; exit 1
+    }
+    $npmPath2 = (Get-Command npm -ErrorAction Stop).Source
+    & $npmPath2 uninstall -g orbix-nichefinder-x
+    $localApp = Join-Path $env:USERPROFILE ".nichefinder-x"
+    if (Test-Path $localApp) {
+        Write-Info "Removing local app files: $localApp"
+        Remove-Item -Recurse -Force $localApp -ErrorAction SilentlyContinue
+        Write-OK "Local app files removed"
+    } else {
+        Write-Info "Local app files not found - already clean"
+    }
+    Write-Host ""
+    Write-Host "  +============================================================+" -ForegroundColor Green
+    Write-Host "  |   UNINSTALL COMPLETE                                       |" -ForegroundColor Green
+    Write-Host "  |   NicheFinder X has been removed.                          |" -ForegroundColor Green
+    Write-Host "  |   Node.js was NOT removed.                                 |" -ForegroundColor Green
+    Write-Host "  +============================================================+" -ForegroundColor Green
+    Write-Host ""
+    Read-Host "  Press ENTER to exit"; exit 0
+}
+elseif ($umethod -eq "3") {
+    Write-Info "Uninstall cancelled."; exit 0
+}
+elseif ($umethod -ne "2") {
+    Write-Fail "Invalid choice. Run again and enter 1, 2 or 3."
+    Read-Host "  Press ENTER to exit"; exit 1
+}
+
+Write-Host ""
+Write-Info "Continuing with full uninstaller..."
+Write-Host ""
+
 # --- STEP 1 --- FIND INSTALL DIRECTORY -------------------------
 Write-Step "STEP 1 - Finding Installation"
 Write-Div
