@@ -27,6 +27,63 @@ echo -e "  ${RED}|${NC}                                                         
 echo -e "  ${RED}+============================================================+${NC}"
 echo ""
 
+# ── UNINSTALL METHOD CHOOSER ────────────────────────────────
+echo -e "  ${WHITE}Choose your uninstall method:${NC}"
+echo ""
+echo -e "  ${CYAN}[1]${NC}  ${WHITE}npm uninstall${NC} — if you installed via npm"
+echo -e "      Command: npm uninstall -g orbix-nichefinder-x"
+echo ""
+echo -e "  ${CYAN}[2]${NC}  ${WHITE}Full Uninstaller${NC} — if you used the shell installer"
+echo -e "      Removes app folder, shortcuts, and optionally Node.js"
+echo ""
+echo -e "  ${CYAN}[3]${NC}  Exit"
+echo ""
+read -r -p "  Enter 1, 2 or 3: " METHOD
+
+case "$METHOD" in
+  1)
+    echo ""
+    if ! command -v npm &>/dev/null; then
+      fail "npm not found. Node.js may already be removed."
+      exit 1
+    fi
+    info "Running: npm uninstall -g orbix-nichefinder-x"
+    npm uninstall -g orbix-nichefinder-x
+    if [[ $? -ne 0 ]]; then
+      warn "Package may not have been installed via npm. Try Option 2 instead."
+      exit 1
+    fi
+    info "Removing local app files (~/.nichefinder-x)..."
+    if [[ -d "$HOME/.nichefinder-x" ]]; then
+      rm -rf "$HOME/.nichefinder-x"
+      ok "Local app files removed"
+    else
+      info "Local app files not found — already clean"
+    fi
+    echo ""
+    echo -e "  ${GREEN}+============================================================+${NC}"
+    echo -e "  ${GREEN}|   UNINSTALL COMPLETE                                       |${NC}"
+    echo -e "  ${GREEN}|   NicheFinder X has been removed.                          |${NC}"
+    echo -e "  ${GREEN}|   Node.js was NOT removed.                                 |${NC}"
+    echo -e "  ${GREEN}+============================================================+${NC}"
+    echo ""
+    exit 0
+    ;;
+  2)
+    echo ""
+    info "Continuing with full uninstaller..."
+    echo ""
+    ;;
+  3)
+    info "Uninstall cancelled."
+    exit 0
+    ;;
+  *)
+    fail "Invalid choice. Run again and enter 1, 2 or 3."
+    exit 1
+    ;;
+esac
+
 # ── STEP 1 - FIND INSTALLATION ───────────────────────────────
 step "STEP 1 - Finding Installation"
 div
