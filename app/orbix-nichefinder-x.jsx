@@ -394,7 +394,7 @@ export default function NicheFinderX() {
   }
 
   // ── UPDATE SYSTEM ──────────────────────────────────────────
-  const CURRENT_VERSION = "1.07"
+  const CURRENT_VERSION = "1.08"
   const VERSION_URL     = "https://raw.githubusercontent.com/roughboy99/orbix-nichefinder-x/main/version.json"
 
   const parseVer = v => v.split(".").map(Number).reduce((a,n,i) => a + n * Math.pow(100, 2-i), 0)
@@ -478,11 +478,11 @@ export default function NicheFinderX() {
   }
 
   const buildQuery = useCallback(() => {
-    const parts = [niche.trim()]
-    const ind = INDUSTRIES.find(i => i.label === industry)
-    if (ind?.kw) parts.push(ind.kw)
-    return parts.filter(Boolean).join(" ")
-  }, [niche, industry])
+    // Send ONLY the niche keyword to the API — the search endpoint matches
+    // user bios and display names, not full text. Long multi-word industry
+    // keyword strings cause 0 results. Industry is used for UI labeling only.
+    return niche.trim()
+  }, [niche])
 
   const saveCurrentNiche = () => {
     if (!niche.trim()) { setError("Enter a niche keyword first"); return }
@@ -547,20 +547,42 @@ export default function NicheFinderX() {
         if (!res.ok) { const t = await res.text(); throw new Error(`API Error ${res.status}: ${t}`) }
 
         const data = await res.json()
-        const raw  = data.users || data.data?.users || data.results || data.data || []
+        const raw   = data.users || data.data?.users || data.results || data.data || []
         const users = Array.isArray(raw) ? raw : []
 
-        if (!users.length && page === 0) throw new Error(
-          "No users returned for this query. Try: a shorter/broader keyword, fewer words, or lower the Min Followers slider."
-        )
+        // Debug: log raw response to browser console
+        if (page === 0) {
+          console.log("[NicheFinder] API response:", {
+            status: data.status, msg: data.msg,
+            usersReturned: users.length,
+            has_next_page: data.has_next_page,
+            query,
+          })
+        }
 
+        if (!users.length && page === 0) {
+          // API returned zero users — status gives more context
+          const apiMsg = data.msg ? ` (API: ${data.msg})` : ""
+          throw new Error(
+            `The API returned 0 accounts for "${query}".${apiMsg} ` +
+            "Try a single broad keyword like: realtor, fitness, crypto, saas"
+          )
+        }
+
+        let pageAdded = 0
         users.forEach(u => {
           const p = parseUser(u)
           if (!p.handle) return
           if (p.followers < minFollowers) return
           if (verifiedOnly && !p.verified && !p.blueVerified) return
           allUsers.set(p.handle.toLowerCase(), p)
+          pageAdded++
         })
+
+        // If first page returned users but all were filtered out, warn
+        if (page === 0 && users.length > 0 && allUsers.size === 0) {
+          setStatusMsg(`API returned ${users.length} accounts but all were below the ${minFollowers.toLocaleString()} follower minimum. Try lowering the Min Followers slider.`)
+        }
 
         cursor = data.next_cursor || data.cursor || data.meta?.next_cursor || data.next_page || ""
         page++
@@ -573,6 +595,18 @@ export default function NicheFinderX() {
       const sorted = [...allUsers.values()]
         .sort((a, b) => b.followers - a.followers)
         .slice(0, maxResults)
+
+      if (sorted.length === 0) {
+        setError(
+          `No accounts matched your filters after searching "${query}". ` +
+          `Try: lower the Min Followers slider (currently ${minFollowers.toLocaleString()}), ` +
+          `turn off Verified Only, or use a broader keyword.`
+        )
+        setLoading(false)
+        setProgress(0)
+        setStatusMsg("")
+        return
+      }
 
       setResults(sorted)
       setProgress(100)
@@ -1465,7 +1499,7 @@ export default function NicheFinderX() {
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <span style={{ fontSize:11, color:B.muted, fontFamily:"'Fira Code',monospace" }}>
-            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.07</span>
+            v<span style={{ color:B.blueHi, fontWeight:600 }}>1.08</span>
           </span>
           <div style={{ height:12, width:1, background:B.border }}/>
           <a href="https://getorbix.com" target="_blank" rel="noopener noreferrer"
